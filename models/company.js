@@ -49,7 +49,35 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
+  static async findAll(queryFilters = {}) {
+    /** Set up filters array to contain SQL syntax and filtersValues array to contain the values */
+    const { nameLike, minEmployees, maxEmployees } = queryFilters
+    const filters = []
+    const filtersValues = []
+
+    /** For each query that was passed, create valid SQL syntax and add it to the filters array. And add in the value into the filtersValues array. And turn all numbers from the query string into an integer. */
+    if (nameLike) {
+      const nameLikeSql = `name ILIKE $${filtersValues.length + 1}`
+      filters.push(nameLikeSql)
+      filtersValues.push(`%${nameLike}%`)
+    }
+    if (minEmployees) {
+      const minEmployeesSql = `num_employees >= $${filtersValues.length + 1}`
+      filters.push(minEmployeesSql)
+      filtersValues.push(Number(minEmployees))
+    }
+    if (maxEmployees) {
+      const maxEmployeesSql = `num_employees <= $${filtersValues.length + 1}`
+      filters.push(maxEmployeesSql)
+      filtersValues.push(Number(maxEmployees))
+    }
+
+    /** Join each of the filters SQL syntax into one string and prepend a WHERE clause before the full string. */
+    let filtersSql = filters.join(" and ")
+    if (filtersSql.length > 0) {
+      filtersSql = "WHERE " + filtersSql
+    }
+
     const companiesRes = await db.query(
           `SELECT handle,
                   name,
@@ -57,7 +85,8 @@ class Company {
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
            FROM companies
-           ORDER BY name`);
+           ${filtersSql}
+           ORDER BY name`, filtersValues);
     return companiesRes.rows;
   }
 
@@ -70,6 +99,7 @@ class Company {
    **/
 
   static async get(handle) {
+
     const companyRes = await db.query(
           `SELECT handle,
                   name,
