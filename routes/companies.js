@@ -21,7 +21,7 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
 
 router.post("/", ensureAdmin, async function (req, res, next) {
@@ -52,7 +52,6 @@ router.post("/", ensureAdmin, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    console.log(req.query)
     const companies = await Company.findAll(req.query);
     return res.json({ companies });
   } catch (err) {
@@ -85,7 +84,7 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
 
 router.patch("/:handle", ensureAdmin, async function (req, res, next) {
@@ -105,7 +104,7 @@ router.patch("/:handle", ensureAdmin, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: admin
  */
 
 router.delete("/:handle", ensureAdmin, async function (req, res, next) {
